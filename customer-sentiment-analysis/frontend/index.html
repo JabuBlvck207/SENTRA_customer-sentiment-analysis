@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Sentiment Analysis</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <i data-lucide="bar-chart-3"></i>
+          <span># Sentra</span>
+        </div>
+        <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#overview" class="nav-item active" data-section="overview">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Overview</span>
+        </a>
+        <a href="#analyse" class="nav-item" data-section="analyse">
+          <i data-lucide="message-square"></i>
+          <span>Analyse Feedback</span>
+        </a>
+        <a href="#documents" class="nav-item" data-section="documents">
+          <i data-lucide="file-text"></i>
+          <span>Document Analysis</span>
+        </a>
+        <a href="#history" class="nav-item" data-section="history">
+          <i data-lucide="history"></i>
+          <span>Feedback History</span>
+        </a>
+        <a href="#insights" class="nav-item" data-section="insights">
+          <i data-lucide="lightbulb"></i>
+          <span>Customer Insights</span>
+        </a>
+        <a href="#settings" class="nav-item" data-section="settings">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="service-status" id="serviceStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">Checking…</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+          <i data-lucide="menu"></i>
+        </button>
+        <div class="topbar-title">
+          <h1 id="pageTitle">Overview</h1>
+          <p id="pageDesc">Dashboard overview of customer sentiment analytics</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="date-filters">
+            <input type="date" id="dateFrom" title="From date" />
+            <span class="date-sep">–</span>
+            <input type="date" id="dateTo" title="To date" />
+          </div>
+          <button class="btn btn-ghost" id="refreshBtn" title="Refresh data">
+            <i data-lucide="refresh-cw"></i>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Overview Section -->
+      <section id="section-overview" class="section active">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i data-lucide="messages-square"></i></div>
+            <div class="stat-body">
+              <span class="stat-label">Total Feedback</span>
+              <span class="stat-value" id="statTotal">—</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i data-lucide="thumbs-up"></i></div>
+            <div class="stat-body">
+              <span class="stat-label">Positive</span>
+              <span class="stat-value" id="statPositive">—</span>
+              <span class="stat-sub" id="statPositivePct"></span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red"><i data-lucide="thumbs-down"></i></div>
+            <div class="stat-body">
+              <span class="stat-label">Negative</span>
+              <span class="stat-value" id="statNegative">—</span>
+              <span class="stat-sub" id="statNegativePct"></span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber"><i data-lucide="minus-circle"></i></div>
+            <div class="stat-body">
+              <span class="stat-label">Neutral</span>
+              <span class="stat-value" id="statNeutral">—</span>
+              <span class="stat-sub" id="statNeutralPct"></span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><i data-lucide="file-stack"></i></div>
+            <div class="stat-body">
+              <span class="stat-label">Documents</span>
+              <span class="stat-value" id="statDocs">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="card chart-card">
+            <h3>Sentiment Distribution</h3>
+            <div class="chart-wrap">
+              <canvas id="doughnutChart"></canvas>
+              <div class="empty-chart" id="doughnutEmpty">No data yet</div>
+            </div>
+          </div>
+          <div class="card chart-card">
+            <h3>Sentiment Over Time</h3>
+            <div class="chart-wrap">
+              <canvas id="trendChart"></canvas>
+              <div class="empty-chart" id="trendEmpty">No trend data yet</div>
+            </div>
+          </div>
+          <div class="card chart-card">
+            <h3>Theme Frequency</h3>
+            <div class="chart-wrap chart-wrap-small">
+              <canvas id="barChart"></canvas>
+              <div class="empty-chart" id="barEmpty">No theme data yet</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Top Complaint Categories</h3>
+          <div id="complaintList" class="complaint-list">
+            <p class="empty-state">No complaint data available yet.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analyse Feedback Section -->
+      <section id="section-analyse" class="section">
+        <div class="card analyse-card">
+          <h3>Analyse Individual Feedback</h3>
+          <p class="card-desc">Paste or type a customer comment to classify its sentiment using AI.</p>
+          <div class="form-group">
+            <label for="feedbackInput">Customer Feedback</label>
+            <textarea id="feedbackInput" rows="6" maxlength="10000" placeholder="e.g. The product arrived damaged and customer support has not replied to my emails…"></textarea>
+            <div class="char-counter"><span id="charCount">0</span> / 10 000</div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" id="analyseBtn">
+              <i data-lucide="sparkles"></i>
+              <span>Analyse Sentiment</span>
+            </button>
+            <button class="btn btn-ghost" id="clearFeedbackBtn">Clear</button>
+          </div>
+          <div id="analyseLoading" class="loading-state hidden">
+            <div class="spinner"></div>
+            <span>Analysing with AI…</span>
+          </div>
+          <div id="analyseError" class="alert alert-error hidden"></div>
+          <div id="analyseResult" class="result-panel hidden"></div>
+        </div>
+      </section>
+
+      <!-- Document Analysis Section -->
+      <section id="section-documents" class="section">
+        <div class="card">
+          <h3>Upload Document</h3>
+          <p class="card-desc">Upload a PDF or TXT file containing customer feedback for bulk analysis.</p>
+          <div class="upload-zone" id="uploadZone">
+            <i data-lucide="upload-cloud"></i>
+            <p>Drag & drop a PDF or TXT file here</p>
+            <p class="upload-hint">or</p>
+            <label class="btn btn-secondary" for="fileInput">Browse Files</label>
+            <input type="file" id="fileInput" accept=".pdf,.txt,application/pdf,text/plain" hidden />
+            <p class="upload-limit">Max 10 MB · PDF & TXT only</p>
+          </div>
+          <div id="selectedFile" class="selected-file hidden">
+            <i data-lucide="file"></i>
+            <div class="file-info">
+              <span class="file-name" id="fileName"></span>
+              <span class="file-size" id="fileSize"></span>
+            </div>
+            <button class="btn-icon" id="removeFileBtn" title="Remove"><i data-lucide="x"></i></button>
+          </div>
+          <div class="form-actions" style="margin-top:1rem">
+            <button class="btn btn-primary" id="uploadAnalyseBtn" disabled>
+              <i data-lucide="play"></i>
+              <span>Upload & Analyse</span>
+            </button>
+          </div>
+          <div id="docLoading" class="loading-state hidden">
+            <div class="spinner"></div>
+            <span id="docLoadingText">Uploading…</span>
+          </div>
+          <div id="docError" class="alert alert-error hidden"></div>
+        </div>
+
+        <div class="card" id="docReportCard" style="display:none">
+          <h3>Document Analysis Report</h3>
+          <div id="docReportContent"></div>
+        </div>
+
+        <div class="card">
+          <h3>Uploaded Documents</h3>
+          <div id="documentsList" class="documents-list">
+            <p class="empty-state">No documents uploaded yet.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- History Section -->
+      <section id="section-history" class="section">
+        <div class="card">
+          <div class="filters-row">
+            <div class="search-box">
+              <i data-lucide="search"></i>
+              <input type="search" id="historySearch" placeholder="Search feedback…" />
+            </div>
+            <select id="historySentiment">
+              <option value="">All sentiments</option>
+              <option value="Positive">Positive</option>
+              <option value="Negative">Negative</option>
+              <option value="Neutral">Neutral</option>
+            </select>
+            <select id="historySource">
+              <option value="">All sources</option>
+              <option value="manual">Manual</option>
+              <option value="document">Document</option>
+            </select>
+            <button class="btn btn-ghost" id="historyFilterBtn">Apply</button>
+          </div>
+          <div id="historyList" class="history-list">
+            <p class="empty-state">No feedback records yet.</p>
+          </div>
+          <div class="pagination" id="historyPagination"></div>
+        </div>
+        <div class="card hidden" id="historyDetailCard">
+          <h3>Feedback Detail</h3>
+          <div id="historyDetail"></div>
+          <button class="btn btn-ghost" id="closeDetailBtn">Close</button>
+        </div>
+      </section>
+
+      <!-- Insights Section -->
+      <section id="section-insights" class="section">
+        <div class="insights-grid" id="insightsContent">
+          <p class="empty-state">Loading insights…</p>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="section-settings" class="section">
+        <div class="card">
+          <h3>Application Settings</h3>
+          <p class="card-desc">Configuration is managed via environment variables on the server. API keys are never exposed to the browser.</p>
+          <div class="settings-list">
+            <div class="setting-item">
+              <span class="setting-label">AI Service Status</span>
+              <span id="settingsAiStatus">—</span>
+            </div>
+            <div class="setting-item">
+              <span class="setting-label">Configured Model</span>
+              <span id="settingsModel">—</span>
+            </div>
+            <div class="setting-item">
+              <span class="setting-label">Max Upload Size</span>
+              <span>10 MB</span>
+            </div>
+            <div class="setting-item">
+              <span class="setting-label">Supported Formats</span>
+              <span>PDF, TXT</span>
+            </div>
+          </div>
+          <div class="alert alert-info" style="margin-top:1.5rem">
+            <strong>How to configure:</strong> Edit the <code>.env</code> file in the project root with your OpenRouter API key and preferred model, then restart the server.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/charts.js"></script>
+  <div id="scripts">
+    <script src="/js/app.js"></script>
+    <script src="/js/dashboard.js"></script>
+    <script src="/js/document-analysis.js"></script>
+    <script src="/js/feedback-history.js"></script>
+  </div>
+</body>
+</html>
